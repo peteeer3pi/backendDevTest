@@ -3,9 +3,12 @@ package com.itx.similarproducts.application.steps;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,11 +19,13 @@ public class ProductSteps {
 
   @Autowired private TestRestTemplate restTemplate;
 
-  private ResponseEntity<List> response;
+  @Autowired private ObjectMapper objectMapper;
+
+  private ResponseEntity<String> response;
 
   @When("I request similar products for product {string}")
   public void requestSimilarProducts(String productId) {
-    response = restTemplate.getForEntity("/product/{productId}/similar", List.class, productId);
+    response = restTemplate.getForEntity("/product/{productId}/similar", String.class, productId);
   }
 
   @Then("the response status should be {int}")
@@ -29,10 +34,12 @@ public class ProductSteps {
   }
 
   @Then("the response should contain the similar products")
-  public void responseShouldContainSimilarProducts(DataTable dataTable) {
+  public void responseShouldContainSimilarProducts(DataTable dataTable) throws IOException {
     assertNotNull(response.getBody());
 
-    List<Map<String, Object>> actualProducts = response.getBody();
+    List<Map<String, Object>> actualProducts =
+        objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
     List<Map<String, String>> expectedProducts = dataTable.asMaps(String.class, String.class);
 
     assertEquals(expectedProducts.size(), actualProducts.size());

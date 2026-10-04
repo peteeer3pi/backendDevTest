@@ -11,7 +11,15 @@ Feature: Find similar products
       | 2  | Dress  | 19.99 | true         |
       | 3  | Blazer | 29.99 | false        |
       | 4  | Boots  | 39.99 | true         |
-
+    
   Scenario: Find similar products for a product that does not exist
     When I request similar products for product "999"
     Then the response status should be 404
+
+  Scenario: Find similar products when the product API fails
+    When I request similar products for product "6"
+    Then the response status should be 500
+
+  Scenario: Find similar products when the product API times out
+    When I request similar products for product "10000"
+    Then the response status should be 500
